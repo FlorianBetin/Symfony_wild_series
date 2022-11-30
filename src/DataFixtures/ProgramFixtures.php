@@ -15,7 +15,7 @@ class ProgramFixtures extends Fixture implements DependentFixtureInterface
         $program = new Program();
         $program->setTitle('Walking dead');
         $program->setSynopsis('Des zombies envahissent la terre');
-        $program->setCategory($this->getReference('category_Action'));
+        $program->setCategory($this->getReference('category_Horreur'));
         $program1 = new Program();
         $program1->setTitle('Mercredy');
         $program1->setSynopsis('Mercredy enquête sur d\'etranges meutres à l\'école de nevermore');

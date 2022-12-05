@@ -6,11 +6,6 @@
 
 {% block body %}
 
-<pre>
-    {{ dump(season) }}
-    {{ dump(program) }}
-</pre>
-
 	<div class>
 		<h1>{{program.title}}
 			- Season
@@ -19,6 +14,7 @@
 		<p>{{ program.synopsis }}</p>
 		<p>Category :
 			{{ program.category.name }}</p>
+		
 
 		<div>
 			{% for episode in season.episodes %}
@@ -27,6 +23,7 @@
 				<p>Description: 
 					{{episode.synopsis}}</p>
 				<br>
+				<a href="{{ path("program_episode_show", {"program_id": program.id, "season_id": season.id, 'episode_id': episode.id })}}">Lien vers les épisodes</a>
 
 			{% endfor %}
 

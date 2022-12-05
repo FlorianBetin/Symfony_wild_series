@@ -4,10 +4,6 @@
 
 {% block body %}
 
-<pre>
-    {{ dump(program) }}
-    {{ dump(program.seasons) }}
-</pre>
     <div class="media">
         <img class="align-self-start mr-3" src="{{program.poster}}" alt="{{ program.title }} poster">
         <div class="media-body">
@@ -17,9 +13,11 @@
         </div>
     </div>
 
+<h2>Saisons</h2>
+
     {% for season in program.seasons %}
 
-        <a href="{{ path('program_season_show', { programid: program.id, seasonid: season.id} ) }}"> <p>{{season.number}}</p> </a>
+        <a href="{{ path('program_season_show', { program_id: program.id, season_id: season.id} ) }}"> <p>{{season.number}}</p> </a>
 
     {% endfor %}
 

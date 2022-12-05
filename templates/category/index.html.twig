@@ -8,12 +8,27 @@
     {{ dump(categories) }}
 </pre>
 
-    <h1>Toutes les catégories : </h1>
+    {# <h1>Toutes les catégories : </h1>
     {% for category in categories %}
         <div>
             <h2>{{ loop.index }} / {{category.name}}</h2>
             <a href="{{ path("category_show", { categoryName: category.name })}}">Voir les séries associées à cette catégorie</a>
-        </div>
+        </div> #}
+
+<h1>Toutes les catégories : </h1>
+    {% for category in categories %}
+
+<div class="d-inline-flex p-2">
+<div class="card" style="width: 18rem;">
+  <img class="card-img-top" src="..." alt="Card image cap">
+  <div class="card-body">
+    <h5 class="card-title">{{ loop.index }} / {{category.name}}</h5>
+    <a href="{{ path("category_show", { categoryName: category.name })}}" class="btn btn-primary">Voir la fiche</a>
+  </div>
+</div>
+</div>
+
+
     {% else %}
         Aucune catégorie trouvée.
     {% endfor %}

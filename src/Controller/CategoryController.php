@@ -2,11 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Category;
+use App\Form\CategoryType;
+use App\Repository\ProgramRepository;
 use App\Repository\CategoryRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Repository\ProgramRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 
 #[Route('/category', name: 'category_')]
 class CategoryController extends AbstractController
@@ -19,6 +22,31 @@ class CategoryController extends AbstractController
             'categories' => $categories,
         ]);
     }
+
+    #[Route('/new', name: 'new')]
+public function new(Request $request, CategoryRepository $categoryRepository): Response
+{
+    $category = new Category();
+
+    // Create the form, linked with $category
+    $form = $this->createForm(CategoryType::class, $category);
+
+    $form->handleRequest($request);
+    if ($form->isSubmitted()) {
+        // Deal with the submitted data
+        // For example : persiste & flush the entity
+        // And redirect to a route that display the result
+        $categoryRepository->save($category, true); 
+        return $this->redirectToRoute('category_index');
+    }
+
+
+    // Render the form (best practice)
+    return $this->renderForm('category/new.html.twig', [
+        'form' => $form,
+    ]);
+
+}
 
     #[Route('/{categoryName}/', methods: ['GET'], name: 'show')]
     public function show(string $categoryName, CategoryRepository $categoryRepository, ProgramRepository $programRepository): Response

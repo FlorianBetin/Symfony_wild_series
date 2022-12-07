@@ -32,7 +32,7 @@ public function new(Request $request, CategoryRepository $categoryRepository): R
     $form = $this->createForm(CategoryType::class, $category);
 
     $form->handleRequest($request);
-    if ($form->isSubmitted()) {
+    if ($form->isSubmitted() && $form->isValid()) {
         // Deal with the submitted data
         // For example : persiste & flush the entity
         // And redirect to a route that display the result

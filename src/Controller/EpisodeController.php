@@ -31,9 +31,12 @@ class EpisodeController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $episodeRepository->save($episode, true);
 
+            $this->addFlash('success', 'The new episode has been created');
             return $this->redirectToRoute('app_episode_index', [], Response::HTTP_SEE_OTHER);
+        } else {
+            $this->addFlash('danger', 'The new episode hasn\'t been created');
         }
-
+            
         return $this->renderForm('episode/new.html.twig', [
             'episode' => $episode,
             'form' => $form,

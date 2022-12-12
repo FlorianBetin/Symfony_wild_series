@@ -37,9 +37,11 @@ public function new(Request $request, CategoryRepository $categoryRepository): R
         // For example : persiste & flush the entity
         // And redirect to a route that display the result
         $categoryRepository->save($category, true); 
-        return $this->redirectToRoute('category_index');
+        $this->addFlash('success', 'The new category has been created');
+        return $this->redirectToRoute('app_category_index', [], Response::HTTP_SEE_OTHER);
+    } else {
+        $this->addFlash('danger', 'The new category hasn\'t been created');
     }
-
 
     // Render the form (best practice)
     return $this->renderForm('category/new.html.twig', [

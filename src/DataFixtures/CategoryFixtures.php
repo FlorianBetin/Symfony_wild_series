@@ -16,6 +16,8 @@ class CategoryFixtures extends Fixture
         'Horreur',
     ];
 
+    public static int $categoryIndex = 0;
+
     public function load(ObjectManager $manager)
     {
         foreach (self::CATEGORIES as $key => $categoryName) {  

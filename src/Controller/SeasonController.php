@@ -31,7 +31,10 @@ class SeasonController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $seasonRepository->save($season, true);
 
+            $this->addFlash('success', 'The new season has been created');
             return $this->redirectToRoute('app_season_index', [], Response::HTTP_SEE_OTHER);
+        } else {
+            $this->addFlash('danger', 'The new season hasn\'t been created');
         }
 
         return $this->renderForm('season/new.html.twig', [

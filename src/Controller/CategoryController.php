@@ -38,7 +38,7 @@ public function new(Request $request, CategoryRepository $categoryRepository): R
         // And redirect to a route that display the result
         $categoryRepository->save($category, true); 
         $this->addFlash('success', 'The new category has been created');
-        return $this->redirectToRoute('app_category_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('category_index', [], Response::HTTP_SEE_OTHER);
     } else {
         $this->addFlash('danger', 'The new category hasn\'t been created');
     }
@@ -66,6 +66,34 @@ public function new(Request $request, CategoryRepository $categoryRepository): R
         'category' => $category,
         'programs' => $programs,
     ]);
+}
+
+#[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
+public function edit(Request $request, Category $category, CategoryRepository $categoryRepository): Response
+{
+    $form = $this->createForm(CategoryType::class, $category);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $categoryRepository->save($category, true);
+
+        return $this->redirectToRoute('category_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    return $this->renderForm('category/edit.html.twig', [
+        'category' => $category,
+        'form' => $form,
+    ]);
+}
+
+#[Route('/{id}', name: 'delete', methods: ['POST'])]
+public function delete(Request $request, Category $category, CategoryRepository $categoryRepository): Response
+{
+    if ($this->isCsrfTokenValid('delete'.$category->getId(), $request->request->get('_token'))) {
+        $categoryRepository->remove($category, true);
+    }
+
+    return $this->redirectToRoute('category_index', [], Response::HTTP_SEE_OTHER);
 }
 
 

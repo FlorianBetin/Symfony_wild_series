@@ -18,16 +18,17 @@ class ActorFixtures extends Fixture implements DependentFixtureInterface
         $faker = Factory::create();
 
 
-            for($i = 0; $i < 10; $i++) {  
-            $actor = new Actor();  
+        for ($i = 0; $i < 10; $i++) {
+            $actor = new Actor();
             $actor->setName($faker->name());
-            for ($j = 0; $j < 3; $j++){
-            $actor->addProgram($this->getReference('program_' . $j));
-        }
+            for ($j = 0; $j < 3; $j++) {
+                $actor->addProgram($this->getReference('program_' . $faker->unique()->numberBetween(0, ProgramFixtures::$programIndex - 1)));
+            }
             $manager->persist($actor);
+            $faker->unique(true);
             // Pas compris ça
             // $this->addReference('actor_' . self::$actorIndex, $actor); 
-            self::$actorIndex++; 
+            self::$actorIndex++;
         }
 
         $manager->flush();
@@ -36,7 +37,7 @@ class ActorFixtures extends Fixture implements DependentFixtureInterface
     public function getDependencies(): array
     {
         return [
-           ProgramFixtures::class,
+            ProgramFixtures::class,
         ];
     }
 }

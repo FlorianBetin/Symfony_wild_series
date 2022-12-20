@@ -6,12 +6,16 @@ use App\Entity\Season;
 use App\Entity\Episode;
 use App\Entity\Program;
 use App\Form\ProgramType;
+use App\Service\ProgramDuration;
+use Symfony\Component\Mime\Email;
 use App\Repository\SeasonRepository;
 use App\Repository\ProgramRepository;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -37,27 +41,35 @@ class ProgramController extends AbstractController
     }
 
     #[Route('/new', name: 'new')]
-    public function new(Request $request, ProgramRepository $programRepository): Response
+    public function new(Request $request, ProgramRepository $programRepository, SluggerInterface $slugger, MailerInterface $mailer): Response
     {
         $program = new Program();
     
+
         // Create the form, linked with $category
         $form = $this->createForm(ProgramType::class, $program);
     
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            // Deal with the submitted data
-            // For example : persiste & flush the entity
-            // And redirect to a route that display the result
-            
+            // créer le slug en db de program à partir du form de création
+            $slug = $slugger->slug($program->getTitle());
+            $program->setSlug($slug);
             $programRepository->save($program, true); 
+            // message de confirmation de succès de la soumission du form
             $this->addFlash('success', 'The new program has been created');
+            // mail de confirmation de succès de la soumission du form
+            $email = (new Email())
+            ->from($this->getParameter('mailer_from'))
+            ->to('your_email@example.com')
+            ->subject('Une nouvelle série vient d\'être publiée !')
+            ->html($this->renderView('Program/newProgramEmail.html.twig', ['program' => $program]));
+            $mailer->send($email);
+            // renvoie vers la page d'acceuil
             return $this->redirectToRoute('program_index');
         } else {
+            // si le form n'a pas fonctionné
             $this->addFlash('danger', 'The new program hasn\'t been created');
         }
-    
-    
         // Render the form (best practice)
         return $this->renderForm('program/new.html.twig', [
             'program' => $program,
@@ -66,21 +78,22 @@ class ProgramController extends AbstractController
     
     }
 
-    #[Route('/{id}/', name: 'show')]
-    public function show(int $id, Program $program): Response
+    #[Route('/{slug}/', name: 'show')]
+    public function show(string $slug, Program $program, ProgramDuration $programDuration): Response
     {
         if (!$program) {
         throw $this->createNotFoundException(
-            'No program with id : '.$id.' found in program\'s table.'
+            'No program with name : '.$slug.' found in program\'s table.'
         );
     }
     return $this->render('program/show.html.twig', [
         'program' => $program,
+        'programDuration' => $programDuration->calculate($program)
     ]);
 }
 
-#[Route('/{program_id}/seasons/{season_id}', name: 'season_show')]
-#[Entity('program', options: ['mapping' => ['program_id' => 'id']])]
+#[Route('/{program_slug}/seasons/{season_id}', name: 'season_show')]
+#[Entity('program', options: ['mapping' => ['program_slug' => 'slug']])]
 #[Entity('seasons', options: ['mapping' => ['season_id' => 'id']])]
     public function showSeason(Program $program, Season $season): Response
     {
@@ -90,10 +103,10 @@ class ProgramController extends AbstractController
         ]);
     }
 
-#[Route('/{program_id}/seasons/{season_id}/episode/{episode_id}', name: 'episode_show')]
-#[Entity('program', options: ['mapping' => ['program_id' => 'id']])]
+#[Route('/{program_slug}/seasons/{season_id}/episode/{episode_slug}', name: 'episode_show')]
+#[Entity('program', options: ['mapping' => ['program_slug' => 'slug']])]
 #[Entity('seasons', options: ['mapping' => ['season_id' => 'id']])]
-#[Entity('episode', options: ['mapping' => ['episode_id' => 'id']])]
+#[Entity('episode', options: ['mapping' => ['episode_slug' => 'slug']])]
 public function showEpisode (Program $program, Season $season, Episode $episode): Response
 {
     return $this->render('program/episode.html.twig', [
@@ -104,12 +117,14 @@ public function showEpisode (Program $program, Season $season, Episode $episode)
 } 
 
 #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-public function edit(Request $request, Program $program, ProgramRepository $programRepository): Response
+public function edit(Request $request, Program $program, ProgramRepository $programRepository, SluggerInterface $slugger): Response
 {
     $form = $this->createForm(ProgramType::class, $program);
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
+        $slug = $slugger->slug($program->getTitle());
+        $program->setSlug($slug);
         $programRepository->save($program, true);
 
         return $this->redirectToRoute('program_index', [], Response::HTTP_SEE_OTHER);

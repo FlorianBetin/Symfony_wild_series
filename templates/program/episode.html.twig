@@ -6,16 +6,52 @@
 
 {% block body %}
 
+<pre>
+	{{ dump(comments) }}
+	{{ dump(allcomments)}}
+	{{ dump(app.user)}}
+</pre>
+
 	<div class>
 		<h1>{{program.title}}
 			- Season
 			{{season.number}}</h1>
-            <h2>Episode number {{episode.number}}</h2>
+            <h2>Episode number {{episode.number}} id : {{episode.id}}</h2>
 		<p>{{ episode.synopsis }}</p>
 
 			<a href="{{ path('program_index') }}">
 				Program list
 			</a>
 		</div>
+
+{% if app.user %}
+
+<h2>Ajouter un commentaire</h2>
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    <button type="submit">Add a comment</button>
+    {{ form_end(form) }}
+
+{% endif %}
+
+<h2>Commentaires sur l'épisode</h2>
+
+{% for allcomment in allcomments %}
+	
+
+	<div>
+	<h3>Postée par: {{allcomment.author.id}}</h3>
+	<div>
+	<p>{{allcomment.comment}}</p>
 	</div>
+	{% if is_granted("ROLE_ADMIN") or allcomment.author == app.user %}
+	<a href="{{ path('app_comment_edit', {'id': allcomment.id}) }}">edit</a>
+	<a href="{{ path('app_comment_delete', {'id': allcomment.id}) }}">delete</a>
+{% endif %}
+</div>
+{% endfor %}
+
+
+
+
 {% endblock %}

@@ -3,12 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Season;
+use App\Entity\Comment;
 use App\Entity\Episode;
 use App\Entity\Program;
+use App\Entity\User;
 use App\Form\ProgramType;
+use App\Form\CommentType;
 use App\Service\ProgramDuration;
 use Symfony\Component\Mime\Email;
 use App\Repository\SeasonRepository;
+use App\Repository\CommentRepository;
 use App\Repository\ProgramRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\MailerInterface;
@@ -19,6 +23,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 #[Route('/program', name: 'program_')]
 class ProgramController extends AbstractController
@@ -54,6 +59,7 @@ class ProgramController extends AbstractController
             // créer le slug en db de program à partir du form de création
             $slug = $slugger->slug($program->getTitle());
             $program->setSlug($slug);
+            $program->setOwner($this->getUser());
             $programRepository->save($program, true); 
             // message de confirmation de succès de la soumission du form
             $this->addFlash('success', 'The new program has been created');
@@ -107,12 +113,33 @@ class ProgramController extends AbstractController
 #[Entity('program', options: ['mapping' => ['program_slug' => 'slug']])]
 #[Entity('seasons', options: ['mapping' => ['season_id' => 'id']])]
 #[Entity('episode', options: ['mapping' => ['episode_slug' => 'slug']])]
-public function showEpisode (Program $program, Season $season, Episode $episode): Response
+public function showEpisode (Request $request, Program $program, Season $season,  Episode $episode, CommentRepository $commentRepository): Response
 {
+    $comment = new Comment;
+    $form = $this->createForm(CommentType::class, $comment);
+    $form->handleRequest($request);
+    $user = $this->getUser();
+    $allComments = $commentRepository->findBy(
+        ['episode' => $episode],
+        ['id' => 'ASC']
+    );
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $comment->setAuthor($user);
+            $comment->setEpisode($episode);
+            $commentRepository->save($comment, true);
+            $this->addFlash('success', 'Your comment has been sent');
+        } else {
+            $this->addFlash('danger', 'Your comment hasn\'t been sent');
+        }
+
     return $this->render('program/episode.html.twig', [
         'episode' => $episode,
         'season' => $season,
         'program' => $program,
+        'form' => $form->createView(),
+        'comments' => $comment,
+        'allcomments' => $allComments
     ]);
 } 
 
@@ -121,11 +148,15 @@ public function edit(Request $request, Program $program, ProgramRepository $prog
 {
     $form = $this->createForm(ProgramType::class, $program);
     $form->handleRequest($request);
-
+    if ($this->getUser() !== $program->getOwner()) {
+        // If not the owner, throws a 403 Access Denied exception
+        throw $this->createAccessDeniedException('Only the owner can edit the program!');
+    }
     if ($form->isSubmitted() && $form->isValid()) {
         $slug = $slugger->slug($program->getTitle());
         $program->setSlug($slug);
         $programRepository->save($program, true);
+
 
         return $this->redirectToRoute('program_index', [], Response::HTTP_SEE_OTHER);
     }

@@ -17,6 +17,13 @@
          <a class="nav-link active" aria-current="page" href="{{ path('category_index') }}">Category</a> <li>
       <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="{{ path('app_actor_index') }}">Actor</a> <li>
+          {% if app.user %}
+      <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{ path('app_logout') }}"> Se déconnecter "{{ app.user.email }}" </a><li>
+{% else %}
+    <li class="nav-item">
+    <a class="nav-link active" aria-current="page" href="{{ path('app_login') }}"> Se connecter</a><li>
+{% endif %}
       </ul>
     </div>
   </div>

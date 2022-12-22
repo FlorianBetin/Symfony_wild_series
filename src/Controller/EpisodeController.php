@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Comment;
 use App\Entity\Episode;
 use App\Form\EpisodeType;
+use App\Repository\CommentRepository;
 use Symfony\Component\Mime\Email;
 use App\Repository\EpisodeRepository;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,8 +21,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class EpisodeController extends AbstractController
 {
     #[Route('/', name: 'app_episode_index', methods: ['GET'])]
-    public function index(EpisodeRepository $episodeRepository): Response
+    public function index( EpisodeRepository $episodeRepository): Response
     {
+        
         return $this->render('episode/index.html.twig', [
             'episodes' => $episodeRepository->findAll(),
         ]);

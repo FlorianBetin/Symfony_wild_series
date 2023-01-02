@@ -9,6 +9,7 @@ use App\Entity\Program;
 use App\Entity\User;
 use App\Form\ProgramType;
 use App\Form\CommentType;
+use App\Form\SearchProgramType;
 use App\Service\ProgramDuration;
 use Symfony\Component\Mime\Email;
 use App\Repository\SeasonRepository;
@@ -31,17 +32,23 @@ class ProgramController extends AbstractController
 {
     #[Route('/', name: 'index')]
 
-    public function index(ProgramRepository $programRepository, RequestStack $requestStack): Response
+    public function index(Request $request, ProgramRepository $programRepository): Response
     {
         $programs = $programRepository->findAll();
-        $session = $requestStack->getSession();
-        // if (!$session->has('total')) {
-        //     $session->set('total', 0) : ; // if total doesn’t exist in session, it is initialized.
-        // }
-    
-        $total = $session->get('total'); // get actual value in session with ‘total' key.
+
+        $form = $this->createForm(SearchProgramType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()){
+            $search = $form->getData()['search'];
+            $programs = $programRepository->findLikeName($search);
+        } else {
+            $programs = $programRepository->findAll();
+        }
+
         return $this->render('program/index.html.twig', [
             'programs' => $programs,
+            'form' => $form->createView(),
         ]);
     }
 

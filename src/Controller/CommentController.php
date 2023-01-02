@@ -30,6 +30,7 @@ class CommentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $comment->setAuthor($this->getUser());
             $commentRepository->save($comment, true);
 
             return $this->redirectToRoute('app_comment_index', [], Response::HTTP_SEE_OTHER);
@@ -55,6 +56,10 @@ class CommentController extends AbstractController
         $form = $this->createForm(CommentType::class, $comment);
         $form->handleRequest($request);
 
+        if ($this->getUser() !== $comment->getAuthor()) {
+            // If not the owner, throws a 403 Access Denied exception
+            throw $this->createAccessDeniedException('Only the owner can edit the program!');
+        }
         if ($form->isSubmitted() && $form->isValid()) {
             $commentRepository->save($comment, true);
 
